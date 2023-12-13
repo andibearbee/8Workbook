@@ -1,10 +1,23 @@
 import java.sql.*;
 import java.util.Scanner;
+import org.apache.commons.dbcp2.BasicDataSource;
+import javax.sql.DataSource;
 
 public class Main {
     static String url = "jdbc:mysql://127.0.0.1:3306/northwind";
     static String user = "root"; //username
-    static String password = System.getenv("MY-SQL-PASSWORD");
+    static String password = System.getenv("MY_SQL_PASSWORD");
+
+    static Scanner keyboard = new Scanner(System.in);
+
+//    String username = args[0];
+//    String password = args[1];
+
+
+//    dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/northwind");
+//    dataSource.setUser(username);
+//    dataSource.setPassword(password);
+
     public static void main(String[] args) throws SQLException {
 
         homeScreen();
@@ -12,22 +25,28 @@ public class Main {
     }
 
     public static void homeScreen () throws SQLException {
+
+        BasicDataSource dataSource = new BasicDataSource();
+
+        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/northwind");
+        dataSource.setUsername(user);
+        dataSource.setPassword(password);
+
         System.out.println("What would you like to do?" +
                 "\n 1) Display all products" +
                 "\n 2) Display all customers" +
                 "\n 3) Display all categories" +
                 "\n 0) Exit");
 
-        Scanner keyboard = new Scanner(System.in);
         int selection = keyboard.nextInt();
 
         switch (selection) {
             case 1 ->
-                displayAll();
+                displayAll(dataSource);
             case 2 ->
-                displayCustomers();
+                displayCustomers(dataSource);
             case 3 ->
-                displayCategories();
+                displayCategories(dataSource);
             case 0 ->
                 System.exit(0);
             default -> {
@@ -37,7 +56,7 @@ public class Main {
         }
 
     }
-    public static void displayAll() throws SQLException {
+    public static void displayAll(DataSource dataSource) throws SQLException {
 
         String query = "SELECT * FROM Products";
 
@@ -47,7 +66,7 @@ public class Main {
         //try/catch/finally
         try {
             // Establishing connection
-            connection = DriverManager.getConnection(url, user, password);
+            connection = dataSource.getConnection();
             preparedStatement = connection.prepareStatement(query);
 
             // Executing query
@@ -76,12 +95,12 @@ public class Main {
         homeScreen();
 
     }
-    public static void displayCustomers() throws SQLException {
+    public static void displayCustomers(DataSource dataSource) throws SQLException {
 
         String query = "SELECT * FROM Customers ORDER BY Country";
         //try with resources eliminates the need for a "finally" statement
         try (
-                Connection connection = DriverManager.getConnection(url, user, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 ResultSet resultSet = preparedStatement.executeQuery(query);
             )
@@ -104,12 +123,12 @@ public class Main {
         homeScreen();
 
         }
-    public static void displayCategories() throws SQLException {
+    public static void displayCategories(DataSource dataSource) throws SQLException {
 
         String query = "SELECT * FROM Categories ORDER BY CategoryId";
         //try with resources eliminates the need for a "finally" statement
         try (
-                Connection connection = DriverManager.getConnection(url, user, password);
+                Connection connection = dataSource.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(query);
                 ResultSet resultSet = preparedStatement.executeQuery(query);
             )
@@ -127,11 +146,11 @@ public class Main {
             e.printStackTrace();
         }
 
-        displayByCatId();
+        displayByCatId(dataSource);
 
     }
 
-    public static void displayByCatId() throws SQLException {
+    public static void displayByCatId(DataSource dataSource) throws SQLException {
 
         Connection connection = null;
         PreparedStatement preparedStatement = null;
@@ -139,11 +158,11 @@ public class Main {
         try {
 
             System.out.println("Enter Category Id of Products you would like to view. ");
-            Scanner keyboard = new Scanner(System.in);
+
             int categoryIdInput = keyboard.nextInt();
             String userQuery = "SELECT * FROM Products WHERE CategoryID = ?";
 
-            connection = DriverManager.getConnection(url, user, password);
+            connection = dataSource.getConnection();
             preparedStatement = connection.prepareStatement(userQuery);
             preparedStatement.setInt(1, categoryIdInput);
             resultSet = preparedStatement.executeQuery();
@@ -162,6 +181,20 @@ public class Main {
             if (resultSet != null) resultSet.close();
             if (preparedStatement != null) preparedStatement.close();
             if (connection != null) connection.close();
+        }
+        keyboard.nextLine();
+        System.out.println("\nWould you like to view another category? Y/N ");
+
+        String response = keyboard.nextLine().toUpperCase();
+        switch (response) {
+            case "Y" ->
+                displayByCatId(dataSource);
+            case "N" ->
+                homeScreen();
+            default -> {
+                System.out.println("\nThat's not a valid selection. Rerouting to the home screen.");
+                homeScreen();
+            }
         }
     }
 
