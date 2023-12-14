@@ -2,20 +2,16 @@ package com.pluralsight;
 
 import java.sql.*;
 import java.util.Scanner;
-import org.apache.commons.dbcp2.BasicDataSource;
-import javax.sql.DataSource;
-import com.pluralsight.DataManager.*;
 
-import static com.pluralsight.DataManager.displayAllActors;
-import com.pluralsight.DataManager.searchActorsByName;
-import com.pluralsight.DataManager.searchFilmsByActorId;
+import java.util.*;
+
+import static com.pluralsight.DataManager.*;
+
 
 
 
 public class Main {
-    static String url = "jdbc:mysql://127.0.0.1:3306/sakila";
-    static String user = "root"; //username
-    static String password = System.getenv("MY_SQL_PASSWORD");
+
 
     static Scanner keyboard = new Scanner(System.in);
 
@@ -25,12 +21,13 @@ public class Main {
 
     }
 
-    public static void homeScreen() throws SQLException {
-        BasicDataSource dataSource = new BasicDataSource();
 
-        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/sakila");
-        dataSource.setUsername(user);
-        dataSource.setPassword(password);
+
+    public static void homeScreen() throws SQLException {
+
+        List<Actor> actors = new ArrayList<>();
+
+        List<Film> films = new ArrayList<>();
 
         System.out.println("Welcome to the Sakila Database. What would you like to do?" +
                 "\n 1) Display all actors" +
@@ -43,14 +40,50 @@ public class Main {
 
         switch (selection) {
             case 1 -> displayAllActors(dataSource);
-            case 2 -> searchActorsByName(String firstName, String lastName);
-            case 3 -> searchFilmsByActorId(int actorId);
+            case 2 -> actorsBYName(actors);
+            case 3 -> filmsBYActorId(films);
             case 0 -> System.exit(0);
             default -> {
-                System.out.println("\nThat's not a valid selection. Please select 1, 2 or 0.");
+                System.out.println("\nThat's not a valid selection. Please select 1, 2, 3 or 0.");
                 homeScreen();
             }
         }
+
+    }
+    public static void actorsBYName(List<Actor> actors) throws SQLException {
+        System.out.println("Enter the Actors First Name: ");
+        String firstName = keyboard.nextLine();
+        System.out.println("Enter the Actors Last Name: ");
+        String lastName = keyboard.nextLine();
+        dataManager.searchActorsByName(firstName, lastName);
+
+        for (Actor actor : actors) {
+            System.out.println("First Name: " + actor.getFirstName());
+            System.out.println("Last Name:  " + actor.getLastName());
+            System.out.println("Actor ID:   " + actor.getActorID());
+            System.out.println("--------");
+        }
+
+    }
+
+    public static void filmsBYActorId(List<Film> films) throws SQLException {
+        displayAllActors(dataSource);
+        System.out.println("Enter Actor Id of Filmography you want to view: ");
+        int actorId = keyboard.nextInt();
+        keyboard.nextLine();
+        dataManager.searchFilmsByActorId(actorId);
+
+        for (Film film : films) {
+            System.out.println("Film ID:        " + film.getFilmID());
+            System.out.println("First Name:     " + film.getFirstName());
+            System.out.println("Last Name:      " + film.getLastName());
+            System.out.println("Film Title:     " + film.getFilmTitle());
+            System.out.println("Description:    " + film.getDescription());
+            System.out.println("Release Year:   " + film.getReleaseYear());
+            System.out.println("Runtime:        " + film.getLength());
+            System.out.println("--------");
+        }
+
 
     }
 

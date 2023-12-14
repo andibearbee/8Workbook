@@ -1,18 +1,33 @@
 package com.pluralsight;
 
 import org.apache.commons.dbcp2.BasicDataSource;
-
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 
+import static com.pluralsight.Main.homeScreen;
+
 
 public class DataManager {
 
-    private DataSource dataSource;
+    static String url = "jdbc:mysql://127.0.0.1:3306/sakila";
+    static String user = "root"; //username
+    static String password = System.getenv("MY_SQL_PASSWORD");
 
+    static  BasicDataSource dataSource = new BasicDataSource();
+
+    static {
+        dataSource.setUrl("jdbc:mysql://127.0.0.1:3306/sakila");
+        dataSource.setUsername(user);
+        dataSource.setPassword(password);
+    }
+
+    static  DataManager dataManager = new DataManager(dataSource);
+
+//    private DataSource dataSource;
+//
     public DataManager(DataSource dataSource) {
-        this.dataSource = dataSource;
+        this.dataSource = (BasicDataSource) dataSource;
     }
 
     static Scanner keyboard = new Scanner(System.in);
@@ -39,11 +54,12 @@ public class DataManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        homeScreen();
 
 
     }
 
-    public List<Actor> searchActorsByName(String firstName, String lastName) {
+    public List<Actor> searchActorsByName(String firstName, String lastName) throws SQLException {
         List<Actor> actors = new ArrayList<>();
         String query = "SELECT first_name, last_name, actor_id " +
                 "FROM actor " +
@@ -59,18 +75,19 @@ public class DataManager {
 
             while (result.next()) {
                 Actor actor = new Actor();
+                actor.setActorID(result.getInt("actor_id"));
                 actor.setFirstName(result.getString("first_name"));
                 actor.setLastName(result.getString("last_name"));
-                actor.setActorID(result.getInt("actor_id"));
                 actors.add(actor);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        homeScreen();
         return actors;
     }
 
-    public List<Film> searchFilmsByActorId(int actorID) {
+    public List<Film> searchFilmsByActorId(int actorID) throws SQLException {
         List<Film> filmographies = new ArrayList<>();
         String query = "SELECT film.film_id, film.release_year, film.length, actor.first_name, actor.last_name, film.title, film.description " +
                 "FROM actor " +
@@ -106,6 +123,7 @@ public class DataManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        homeScreen();
         return filmographies;
     }
 
